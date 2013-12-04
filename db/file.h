@@ -9,6 +9,7 @@
  * BSD License
 */
 
+typedef struct sp sp;
 typedef struct spbatch spbatch;
 typedef struct spfile spfile;
 
@@ -28,6 +29,9 @@ struct spfile {
 	char *file;
 	int fd;
 	char *map;
+#ifdef _MSC_VER
+    HANDLE mapping;
+#endif
 };
 
 int sp_fileexists(char*);
@@ -55,6 +59,7 @@ sp_filesvp(spfile *f) {
 int sp_mapopen(spfile*, char*);
 int sp_mapnew(spfile*, char*, uint64_t);
 int sp_mapclose(spfile*);
+int sp_mapremove(sp *, spfile *, int, uint32_t);
 int sp_mapcomplete(spfile*);
 int sp_mapunmap(spfile*);
 int sp_mapunlink(spfile*);

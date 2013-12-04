@@ -9,7 +9,12 @@
  * BSD License
 */
 
+#ifdef _MSC_VER
+#define inline __inline
+#include <Windows.h>
+#else
 #define _GNU_SOURCE 1
+#endif
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -19,10 +24,18 @@
 #include <limits.h>
 #include <string.h>
 #include <assert.h>
+#ifdef _MSC_VER
+#include <winsupport.h>
+#else
 #include <pthread.h>
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifdef _MSC_VER
+#include <io.h>
+#else
 #include <sys/uio.h>
+#endif
 #include <errno.h>
 
 #include <sophia.h>

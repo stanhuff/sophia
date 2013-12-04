@@ -117,8 +117,9 @@ static inline int sp_merge0(sp *s, spepoch *x, spi *index)
 		}
 
 		/* cancellation point check */
-		if (! sp_active(s))
-			goto err;
+        if (!sp_active(s)) {
+            goto err;
+        }
 
 		/* create in-memory page */
 		sppage *page = sp_pagenew(s, x);
@@ -339,8 +340,9 @@ static inline int sp_split(sp *s, spupdate *u, spmerge *m, spsplit *l)
 		pagesize += bsize + sp_refvsize(&m->last);
 		count++;
 	}
-	if (spunlikely(count == 0 && l->count > 0))
-		return 0;
+    if (spunlikely(count == 0 && l->count > 0)) {
+        return 0;
+    }
 
 	/*
 	 * set the origin page id for a first spitted page
@@ -622,7 +624,7 @@ int sp_merge(sp *s)
 	} else {
 		/* there are possible situation when all keys has
 		 * been deleted. */
-		rc = sp_mapunlink(&x->db);
+        rc = sp_mapunlink(&x->db);
 		if (spunlikely(rc == -1))
 			return sp_em(s, SPEIO|SPEF, x->epoch, "failed to unlink db file");
 		rc = sp_mapclose(&x->db);

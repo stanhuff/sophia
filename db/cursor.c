@@ -158,8 +158,9 @@ sp_lte(spc *c, char *rkey, int size)
 	if (c->s->txn == SPTMS)
 		eq = eq + sp_ilte(&c->s->itxn, &c->itxn, rkey, size);
 	/* match page for the key */
-	if (spunlikely(c->s->s.count == 0))
-		return eq;
+    if (spunlikely(c->s->s.count == 0)){
+        return eq;
+    }
 	/* open page and do lte search of key */
 	uint32_t idx = 0;
 	sppage *p spunused;
@@ -200,8 +201,9 @@ sp_gte(spc *c, char *rkey, int size)
 	if (c->s->txn == SPTMS)
 		eq = eq + sp_igte(&c->s->itxn, &c->itxn, rkey, size);
 	/* match page for the key */
-	if (spunlikely(c->s->s.count == 0))
-		return eq;
+    if (spunlikely(c->s->s.count == 0)){
+        return eq;
+    }
 	/* open page and do gte search of key */
 	uint32_t idx = 0;
 	sppage *p spunused;

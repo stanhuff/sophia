@@ -55,9 +55,10 @@ sp_listempty(splist *l) {
 }
 
 static inline void
-sp_listmerge(splist *a, splist *b) {
-	if (spunlikely(sp_listempty(b)))
-		return;
+sp_listmerge(splist *a, splist *b) {    
+    if (spunlikely(sp_listempty(b))) {
+        return;        
+    }
 	register splist *first = b->next;
 	register splist *last = b->prev;
 	first->prev = a->prev;

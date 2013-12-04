@@ -6,8 +6,9 @@
  * Copyright (c) Dmitry Simonenko
  * BSD License
 */
-
+#ifndef _MSC_VER
 #include <unistd.h>
+#endif
 #include <fcntl.h>
 #include <sophia.h>
 #include <sp.h>
@@ -29,8 +30,12 @@ static void
 log_empty(void) {
 	spfile f;
 	sp_fileinit(&f, &a);
-	t( mkdir(dbrep, 0755) == 0 );
-	t( sp_lognew(&f, dbrep, 1) == 0 );
+#ifdef _MSC_VER
+    t(_mkdir(dbrep) == 0);
+#else
+    t(mkdir(dbrep, 0755) == 0);
+#endif
+    t(sp_lognew(&f, dbrep, 1) == 0);
 	t( sp_logcomplete(&f)  == 0 );
 	t( sp_logclose(&f)  == 0 );
 	t( exists(dbrep, 1, "log") == 1 );
@@ -50,8 +55,12 @@ static void
 log_empty_incomplete(void) {
 	spfile f;
 	sp_fileinit(&f, &a);
-	t( mkdir(dbrep, 0755) == 0 );
-	t( sp_lognew(&f, dbrep, 1) == 0 );
+#ifdef _MSC_VER
+    t(_mkdir(dbrep) == 0);
+#else
+    t(mkdir(dbrep, 0755) == 0);
+#endif
+    t(sp_lognew(&f, dbrep, 1) == 0);
 	t( sp_logclose(&f)  == 0 );
 	t( exists(dbrep, 1, "log.incomplete") == 1 );
 	void *env = sp_env();
@@ -86,8 +95,12 @@ log_badrecord(void) {
 	spbatch b;
 	sp_fileinit(&f, &a);
 	sp_batchinit(&b);
-	t( mkdir(dbrep, 0755) == 0 );
-	t( sp_lognew(&f, dbrep, 1) == 0 );
+#ifdef _MSC_VER
+    t(_mkdir(dbrep) == 0);
+#else
+    t(mkdir(dbrep, 0755) == 0);
+#endif
+    t(sp_lognew(&f, dbrep, 1) == 0);
 	sp_batchadd(&b, &h, sizeof(h));
 	sp_batchadd(&b, &vh, sizeof(vh));
 	sp_batchadd(&b, &k, sizeof(k));
@@ -129,8 +142,12 @@ log_badrecord_incomplete(void) {
 	spbatch b;
 	sp_fileinit(&f, &a);
 	sp_batchinit(&b);
-	t( mkdir(dbrep, 0755) == 0 );
-	t( sp_lognew(&f, dbrep, 1) == 0 );
+#ifdef _MSC_VER
+    t(_mkdir(dbrep) == 0);
+#else
+    t(mkdir(dbrep, 0755) == 0);
+#endif
+    t(sp_lognew(&f, dbrep, 1) == 0);
 	sp_batchadd(&b, &h, sizeof(h));
 	sp_batchadd(&b, &vh, sizeof(vh));
 	sp_batchadd(&b, &k, sizeof(k));
@@ -223,8 +240,12 @@ log_noeof(void) {
 	spbatch b;
 	sp_batchinit(&b);
 	sp_fileinit(&f, &a);
-	t( mkdir(dbrep, 0755) == 0 );
-	t( sp_lognew(&f, dbrep, 1) == 0 );
+#ifdef _MSC_VER
+    t(_mkdir(dbrep) == 0);
+#else
+    t(mkdir(dbrep, 0755) == 0);
+#endif
+    t(sp_lognew(&f, dbrep, 1) == 0);
 	sp_batchadd(&b, &h, sizeof(h));
 	sp_batchadd(&b, &vh, sizeof(vh));
 	sp_batchadd(&b, &k, sizeof(k));
@@ -274,8 +295,12 @@ log_noeof_complete(void) {
 	sp_batchinit(&b);
 	sp_fileinit(&f, &a);
 	sp_batchinit(&b);
-	t( mkdir(dbrep, 0755) == 0 );
-	t( sp_lognew(&f, dbrep, 1) == 0 );
+#ifdef _MSC_VER
+    t(_mkdir(dbrep) == 0);
+#else
+    t(mkdir(dbrep, 0755) == 0);
+#endif
+    t(sp_lognew(&f, dbrep, 1) == 0);
 	sp_batchadd(&b, &h, sizeof(h));
 	sp_batchadd(&b, &vh, sizeof(vh));
 	sp_batchadd(&b, &k, sizeof(k));
@@ -300,8 +325,12 @@ static void
 db_empty(void) {
 	spfile f;
 	sp_fileinit(&f, &a);
-	t( mkdir(dbrep, 0755) == 0 );
-	char path[1024];
+#ifdef _MSC_VER
+    t(_mkdir(dbrep) == 0);
+#else
+    t(mkdir(dbrep, 0755) == 0);
+#endif
+    char path[1024];
 	snprintf(path, sizeof(path), "%s/%"PRIu32".db",
 	         dbrep, 1);
 	int fd = open(path, O_CREAT|O_RDWR, 0644);
@@ -324,8 +353,12 @@ static void
 db_empty_incomplete(void) {
 	spfile f;
 	sp_fileinit(&f, &a);
-	t( mkdir(dbrep, 0755) == 0 );
-	char path[1024];
+#ifdef _MSC_VER
+    t(_mkdir(dbrep) == 0);
+#else
+    t(mkdir(dbrep, 0755) == 0);
+#endif
+    char path[1024];
 	snprintf(path, sizeof(path), "%s/%"PRIu32".db.incomplete",
 	         dbrep, 1);
 	int fd = open(path, O_CREAT|O_RDWR, 0644);
@@ -352,8 +385,12 @@ db_badpage(void) {
 		.size = 1234,
 		.bsize = 1234,
 	};
-	t( mkdir(dbrep, 0755) == 0 );
-	char path[1024];
+#ifdef _MSC_VER
+    t(_mkdir(dbrep) == 0);
+#else
+    t(mkdir(dbrep, 0755) == 0);
+#endif
+    char path[1024];
 	snprintf(path, sizeof(path), "%s/%"PRIu32".db",
 	         dbrep, 1);
 	int fd = open(path, O_CREAT|O_RDWR, 0644);
@@ -396,8 +433,12 @@ log_incomplete_db_incomplete(void) {
 	spbatch b;
 	sp_batchinit(&b);
 	sp_fileinit(&f, &a);
-	t( mkdir(dbrep, 0755) == 0 );
-	t( sp_lognew(&f, dbrep, 1) == 0 );
+#ifdef _MSC_VER
+    t(_mkdir(dbrep) == 0);
+#else
+    t(mkdir(dbrep, 0755) == 0);
+#endif
+    t(sp_lognew(&f, dbrep, 1) == 0);
 	sp_batchadd(&b, &h, sizeof(h));
 	sp_batchadd(&b, &vh, sizeof(vh));
 	sp_batchadd(&b, &k, sizeof(k));
@@ -447,7 +488,11 @@ log_db_incomplete(void) {
 	spbatch b;
 	sp_batchinit(&b);
 	sp_fileinit(&f, &a);
+#ifdef _MSC_VER
+    t( _mkdir(dbrep) == 0 );
+#else
 	t( mkdir(dbrep, 0755) == 0 );
+#endif
 	t( sp_lognew(&f, dbrep, 1) == 0 );
 	sp_batchadd(&b, &h, sizeof(h));
 	sp_batchadd(&b, &vh, sizeof(vh));

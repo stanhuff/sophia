@@ -147,9 +147,11 @@ sp_catfind(spcat *c, char *rkey, int size, uint32_t *index)
 
 sppage *sp_catroute(spcat *c, char *rkey, int size, uint32_t *idx)
 {
-	if (spunlikely(c->count == 1))
-		return c->i[0];
-	uint32_t i;
+    
+    if (spunlikely(c->count == 1)) {
+        return c->i[0];
+    }
+    uint32_t i;
 	sppage *p = sp_catfind(c, rkey, size, &i);
 	if (splikely(p)) {
 		*idx = i;

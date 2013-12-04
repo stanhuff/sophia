@@ -1,4 +1,3 @@
-
 /*
  * sophia database
  * sphia.org
@@ -30,7 +29,7 @@ static inline void sp_envinit(spenv *e) {
 	e->mergewm = 100000;
 	e->merge = 1;
 	e->dbnewsize = 2 * 1024 * 1024;
-	e->dbgrow = 1.4;
+	e->dbgrow = 1.4f;
 	e->gc = 1;
 	e->gcfactor = 0.5;
 }
@@ -105,11 +104,11 @@ static int sp_ctlenv(spenv *e, spopt opt, va_list args)
 		e->gc = va_arg(args, int);
 		break;
 	case SPGCF:
-		e->gcfactor = va_arg(args, double);
+		e->gcfactor = (float)va_arg(args, double);
 		break;
 	case SPGROW:
 		e->dbnewsize = va_arg(args, uint32_t);
-		e->dbgrow = va_arg(args, double);
+		e->dbgrow = (float)va_arg(args, double);
 		break;
 	case SPMERGE:
 		e->merge = va_arg(args, int);
@@ -292,8 +291,9 @@ void *sp_open(void *e)
 	spenv *env = e;
 	assert(env->m == SPMENV);
 	int rc = sp_envvalidate(env);
-	if (spunlikely(rc == -1))
-		return NULL;
+    if (spunlikely(rc == -1)) {
+        return NULL;
+    }
 	spa a;
 	sp_allocinit(&a, env->alloc, env->allocarg);
 	sp *s = sp_malloc(&a, sizeof(sp));
@@ -591,8 +591,10 @@ sp_do(sp *s, int op, void *k, size_t ksize, void *v, size_t vsize)
 	 * the crc calculation before log write. 
 	*/
 	spv *n = sp_vnewv(s, k, ksize, v, vsize);
-	if (spunlikely(n == NULL))
-		return sp_e(s, SPEOOM, "failed to allocate version");
+    if (spunlikely(n == NULL)) {
+        return sp_e(s, SPEOOM, "failed to allocate version");
+    }
+
 	/* prepare log record */
 	spvh h = {
 		.crc     = 0,

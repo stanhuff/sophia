@@ -9,8 +9,10 @@
 
 #include <sophia.h>
 #include <sys/types.h>
+#ifndef _MSC_VER
 #include <sys/wait.h>
 #include <unistd.h>
+#endif
 #include "test.h"
 
 static char *dbrep1 = "./rep";
@@ -79,6 +81,7 @@ single_process_2(void) {
 	t( rmrf(dbrep2) == 0 );
 }
 
+#ifndef _MSC_VER
 static void
 multi_process(void) {
 	void *env = sp_env();
@@ -158,6 +161,7 @@ multi_process_2(void) {
 	t( waitpid(pid, &status, 0) == pid );
 	t( status == 0 );
 }
+#endif
 
 int
 main(int argc, char *argv[])
@@ -167,7 +171,9 @@ main(int argc, char *argv[])
 
 	test(single_process);
 	test(single_process_2);
+#ifndef _MSC_VER
 	test(multi_process);
 	test(multi_process_2);
+#endif
 	return 0;
 }

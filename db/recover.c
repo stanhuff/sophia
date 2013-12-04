@@ -12,12 +12,19 @@
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifndef _MSC_VER
 #include <dirent.h>
 #include <unistd.h>
-
+#else
+#include <direct.h>
+#endif
 static inline int sp_dircreate(sp *s)
 {
-	int rc = mkdir(s->env->dir, 0700);
+#ifdef _MSC_VER
+    int rc = _mkdir(s->env->dir);
+#else
+    int rc = mkdir(s->env->dir, 0700);
+#endif
 	if (spunlikely(rc == -1)) {
 		sp_e(s, SPE, "failed to create directory %s (errno: %d, %s)",
 		     s->env->dir, errno, strerror(errno));
@@ -113,43 +120,93 @@ sp_epochof(char *s) {
 static int sp_diropen(sp *s)
 {
 	/* read repository and determine states */
-	DIR *d = opendir(s->env->dir);
-	if (spunlikely(d == NULL)) {
-		sp_e(s, SPE, "failed to open directory %s (errno: %d, %s)",
-		     s->env->dir, errno, strerror(errno));
-		return -1;
-	}
-	struct dirent *de;
-	while ((de = readdir(d))) {
-		if (*de->d_name == '.')
-			continue;
-		ssize_t epoch = sp_epochof(de->d_name);
-		if (epoch == -1)
-			continue;
-		spepoch *e = sp_repmatch(&s->rep, epoch);
-		if (e == NULL) {
-			e = sp_repalloc(&s->rep, epoch);
-			if (spunlikely(e == NULL)) {
-				closedir(d);
-				sp_e(s, SPEOOM, "failed to allocate repository");
-				return -1;
-			}
-			sp_repattach(&s->rep, e);
-		}
-		char *ext = strstr(de->d_name, ".db");
-		if (ext) {
-			ext = strstr(de->d_name, ".incomplete");
-			e->recover |= (ext? SPRDBI: SPRDB);
-			continue;
-		}
-		ext = strstr(de->d_name, ".log");
-		if (ext) {
-			ext = strstr(de->d_name, ".incomplete");
-			e->recover |= (ext? SPRLOGI: SPRLOG);
-		}
-		continue;
-	}
-	closedir(d);
+#ifdef _MSC_VER
+    WIN32_FIND_DATAA fd;
+    int len = strlen(s->env->dir);
+    char * filter = _alloca(len + 3);
+    strcpy(filter, s->env->dir);
+    if (s->env->dir[len - 1] == '/')
+        strcat(filter + len, "*");
+    else
+        strcat(filter + len, "/*");
+
+    HANDLE d = FindFirstFileA(filter, &fd);
+    if (spunlikely(d == INVALID_HANDLE_VALUE)) {
+        sp_e(s, SPE, "failed to open directory %s (errno: %d, %s)",
+            s->env->dir, errno, strerror(errno));
+        return -1;
+    }
+
+    do {
+        if (*fd.cFileName == '.')
+            continue;
+        ssize_t epoch = sp_epochof(fd.cFileName);
+        if (epoch == -1)
+            continue;
+        spepoch *e = sp_repmatch(&s->rep, epoch);
+        if (e == NULL) {
+            e = sp_repalloc(&s->rep, epoch);
+            if (spunlikely(e == NULL)) {
+                FindClose(d);
+                sp_e(s, SPEOOM, "failed to allocate repository");
+                return -1;
+            }
+            sp_repattach(&s->rep, e);
+        }
+        char *ext = strstr(fd.cFileName, ".db");
+        if (ext) {
+            ext = strstr(fd.cFileName, ".incomplete");
+            e->recover |= (ext ? SPRDBI : SPRDB);
+            continue;
+        }
+        ext = strstr(fd.cFileName, ".log");
+        if (ext) {
+            ext = strstr(fd.cFileName, ".incomplete");
+            e->recover |= (ext ? SPRLOGI : SPRLOG);
+        }
+        continue;
+    } while(FindNextFileA(d, &fd));
+    
+    FindClose(d);
+#else
+    DIR *d = opendir(s->env->dir);
+    if (spunlikely(d == NULL)) {
+        sp_e(s, SPE, "failed to open directory %s (errno: %d, %s)",
+            s->env->dir, errno, strerror(errno));
+        return -1;
+    }
+    struct dirent *de;
+    while ((de = readdir(d))) {
+        if (*de->d_name == '.')
+            continue;
+        ssize_t epoch = sp_epochof(de->d_name);
+        if (epoch == -1)
+            continue;
+        spepoch *e = sp_repmatch(&s->rep, epoch);
+        if (e == NULL) {
+            e = sp_repalloc(&s->rep, epoch);
+            if (spunlikely(e == NULL)) {
+                closedir(d);
+                sp_e(s, SPEOOM, "failed to allocate repository");
+                return -1;
+            }
+            sp_repattach(&s->rep, e);
+        }
+        char *ext = strstr(de->d_name, ".db");
+        if (ext) {
+            ext = strstr(de->d_name, ".incomplete");
+            e->recover |= (ext ? SPRDBI : SPRDB);
+            continue;
+        }
+        ext = strstr(de->d_name, ".log");
+        if (ext) {
+            ext = strstr(de->d_name, ".incomplete");
+            e->recover |= (ext ? SPRLOGI : SPRLOG);
+        }
+        continue;
+    }
+    closedir(d);
+#endif
 	if (s->rep.n == 0)
 		return 0;
 	/* set current and sort by epoch */
@@ -162,8 +219,9 @@ static int sp_diropen(sp *s)
 static int sp_recoverdb(sp *s, spepoch *x, sptrack *t)
 {
 	int rc = sp_mapepoch(&x->db, s->env->dir, x->epoch, "db");
-	if (spunlikely(rc == -1))
-		return sp_e(s, SPEIO, x->epoch, "failed to open db file");
+    if (spunlikely(rc == -1)) {
+        return sp_e(s, SPEIO, x->epoch, "failed to open db file");
+    }
 
 	sppageh *h = (sppageh*)(x->db.map);
 
@@ -287,15 +345,17 @@ static int sp_recoverlog(sp *s, spepoch *x, int incomplete)
 		return sp_e(s, SPEIO, x->epoch, "failed to open log file");
 
 	/* validate log header */
-	if (spunlikely(! sp_mapinbound(&x->log, sizeof(splogh)) ))
-		return sp_e(s, SPE, "bad log file %"PRIu32".log", x->epoch);
+    if (spunlikely(!sp_mapinbound(&x->log, sizeof(splogh)))) {
+        return sp_e(s, SPE, "bad log file %"PRIu32".log", x->epoch);
+    }
 
 	splogh *h = (splogh*)(x->log.map);
 	if (spunlikely(h->magic != SPMAGIC))
 		return sp_e(s, SPE, "log bad magic %"PRIu32".log", x->epoch);
-	if (spunlikely(h->version[0] != SP_VERSION_MAJOR &&
-	               h->version[1] != SP_VERSION_MINOR))
-		return sp_e(s, SPE, "unknown file version of %"PRIu32".log", x->epoch);
+    if (spunlikely(h->version[0] != SP_VERSION_MAJOR &&
+        h->version[1] != SP_VERSION_MINOR)) {
+        return sp_e(s, SPE, "unknown file version of %"PRIu32".log", x->epoch);
+    }
 
 	uint64_t offset = sizeof(splogh);
 	uint32_t unique = 0;
@@ -426,8 +486,9 @@ static int sp_dirrecover(sp *s)
 {
 	sptrack t;
 	int rc = sp_trackinit(&t, &s->a, 1024);
-	if (spunlikely(rc == -1))
-		return sp_e(s, SPEOOM, "failed to allocate track");
+    if (spunlikely(rc == -1)) {
+        return sp_e(s, SPEOOM, "failed to allocate track");
+    }
 
 	/* recover from yongest epochs (biggest numbers) */
 	splist *i;

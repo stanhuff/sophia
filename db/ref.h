@@ -16,6 +16,9 @@ typedef struct sprefset sprefset;
 #define SPREFD    1
 #define SPREFM    2
 
+#ifdef _MSC_VER
+#pragma pack(push,1)
+#endif
 struct spref {
 	uint8_t type;
 	union {
@@ -23,6 +26,9 @@ struct spref {
 		spv *v;
 	} v;
 } sppacked;
+#ifdef _MSC_VER
+#pragma pack(pop)
+#endif
 
 struct sprefset {
 	spref *r;

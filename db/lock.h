@@ -9,12 +9,18 @@
  * BSD License
 */
 
+#ifndef WIN32
 #include <unistd.h>
+#endif
 
 typedef uint8_t spspinlock;
 
 #if defined(__x86_64__) || defined(__i386) || defined(_X86_)
+#ifndef _MSC_VER
 # define CPU_PAUSE __asm__ ("pause")
+#else
+# define CPU_PAUSE _asm { pause };
+#endif
 #else
 # define CPU_PAUSE do { } while(0)
 #endif

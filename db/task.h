@@ -38,7 +38,10 @@ sp_taskstop(sptask *t) {
 	t->run = 0;
 	pthread_cond_signal(&t->c);
 	pthread_mutex_unlock(&t->l);
-	return pthread_join(t->id, NULL);
+	int rslt = pthread_join(t->id, NULL);
+    pthread_mutex_destroy(&t->l);
+    pthread_cond_destroy(&t->c);
+    return rslt;
 }
 
 static inline void

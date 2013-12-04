@@ -56,12 +56,13 @@ int sp_gc(sp *s, spepoch *x)
 		 * remove old files and unlink the epoch
 		 * from the repository.
 		*/
-		rc = sp_mapunlink(&g->db);
-		if (spunlikely(rc == -1))
-			return sp_em(s, SPEIO|SPEF, g->epoch, "failed to unlink db file");
-		rc = sp_mapclose(&g->db);
-		if (spunlikely(rc == -1))
-			return sp_em(s, SPEIO|SPEF, g->epoch, "failed to close db file");
+        rc = sp_mapunlink(&g->db);
+        if (spunlikely(rc == -1))
+            return sp_em(s, SPEIO | SPEF, g->epoch, "failed to unlink db file");
+        rc = sp_mapclose(&g->db);
+        if (spunlikely(rc == -1))
+            return sp_em(s, SPEIO | SPEF, g->epoch, "failed to close db file");
+
 		sp_lock(&s->lockr);
 		sp_repdetach(&s->rep, g);
 		sp_free(&s->a, g);

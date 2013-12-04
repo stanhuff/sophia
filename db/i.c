@@ -202,12 +202,14 @@ int sp_isetorget(spi *i, spv *v, spii *old)
 	/* 2.1. insert page to vector, by moving pointers forward */
 	if (spunlikely(p->count == i->pagesize)) {
 		int rc = sp_iensure(i);
-		if (spunlikely(rc == -1))
-			return -1;
+        if (spunlikely(rc == -1)) {
+            return -1;
+        }
 		/* split page */
 		spipage *n = sp_ipagealloc(i);
-		if (spunlikely(n == NULL))
-			return -1;
+        if (spunlikely(n == NULL)) {
+            return -1;
+        }
 		int half = p->count >> 1;
 		memcpy(&n->i[0], &p->i[half], sizeof(void*) * (half));
 		n->count = half;
@@ -256,8 +258,9 @@ int sp_idelraw(spi *i, char *rkey, int size, spv **old)
 	uint32_t a = 0;
 	if (splikely(i->icount > 1))
 		p = sp_ipageof(i, rkey, size, &a);
-	if (spunlikely(p == NULL))
-		return 0;
+    if (spunlikely(p == NULL)) {
+        return 0;
+    }
 	uint32_t j;
 	*old = sp_iminof(i, p, rkey, size, &j);
 	if (spunlikely(*old == NULL))
@@ -285,8 +288,9 @@ spv *sp_igetraw(spi *i, char *rkey, int size)
 	uint32_t a = 0;
 	if (splikely(i->icount > 1))
 		p = sp_ipageof(i, rkey, size, &a);
-	if (p == NULL)
-		return NULL;
+    if (p == NULL){
+        return NULL;
+    }
 	uint32_t j;
 	return sp_iminof(i, p, rkey, size, &j);
 }

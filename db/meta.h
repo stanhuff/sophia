@@ -19,6 +19,9 @@ typedef struct spvh spvh;
 #define SPEOF   0x00aaeefdL
 #define SPMAGIC 0x00f0e0d0L
 
+#ifdef _MSC_VER
+#pragma pack(push,1)
+#endif
 struct splogh {
 	uint32_t magic;
 	uint8_t version[2];
@@ -44,7 +47,9 @@ struct spvh {
 	uint8_t  flags;
 	char key[];
 } sppacked;
-
+#ifdef _MSC_VER
+#pragma pack(pop)
+#endif
 /* in-memory */
 
 typedef struct spv spv;

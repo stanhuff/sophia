@@ -36,8 +36,10 @@ static inline int sp_repcmp(const void *p1, const void *p2) {
 
 int sp_repprepare(sprep *r) {
 	spepoch **a = sp_malloc(r->a, sizeof(spepoch*) * r->n);
-	if (spunlikely(a == NULL))
-		return -1;
+    if (spunlikely(a == NULL)) {
+        return -1;
+    }
+
 	uint32_t epoch = 0;
 	int j = 0;
 	splist *i;
