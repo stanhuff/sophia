@@ -13,12 +13,12 @@ typedef struct
 
     HANDLE sema_;
     // Semaphore used to queue up threads waiting for the condition to
-    // become signaled. 
+    // become signaled.
 
     HANDLE waiters_done_;
     // An auto-reset event used by the broadcast/signal thread to wait
     // for all the waiting thread(s) to wake up and be released from the
-    // semaphore. 
+    // semaphore.
 
     size_t was_broadcast_;
     // Keeps track of whether we were broadcasting or signaling.  This
@@ -43,3 +43,7 @@ int sp_win_crt2windowsDisposition(int flags);
 int sp_win_crt2windowsMode(int flags);
 int sp_win_openfile(char* path, int flags);
 int sp_win_openfileshare(char* path, int flags, int share);
+
+char __sync_lock_test_and_set(volatile char * a, char v);
+void __sync_lock_release(volatile char * a);
+

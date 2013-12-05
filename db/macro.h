@@ -21,6 +21,8 @@
 
 #define splikely(EXPR) __builtin_expect(!! (EXPR), 1)
 #define spunlikely(EXPR) __builtin_expect(!! (EXPR), 0)
+#define spcast(N, T, F) ((T*)((char*)(N) - __builtin_offsetof(T, F)))
+#define spdiv(a, b) ((a) + (b) - 1) / (b)
 
 #else
 #include <stddef.h>
@@ -28,33 +30,9 @@
 #define splikely(EXPR) (EXPR)
 #define spunlikely(EXPR) (EXPR)
 #define spcast(N, T, F) ((T*)((char*)(N) - offsetof(T, F)))
+#define spdiv(a, b) ((a) + (b) - 1) / (b)
 #define sppacked
 #define spunused
-
-
-static inline __declspec(naked)
-char __sync_lock_test_and_set(volatile char * a, char v) {
-    // Here's a quick mess to implement 8bit InterlockedExchange which
-    // apparently is only available in windows8 - this is very bad
-    _asm {
-            mov         al, byte ptr [esp+8]
-            mov         ecx, dword ptr[esp+4]
-            xchg        al, byte ptr[ecx]
-            ret
-    };
-}
-static inline __declspec(naked)
-void __sync_lock_release(volatile char * a)
-{
-    // Here's a quick mess to implement 8bit InterlockedExchange which
-    // apparently is only available in windows8 - this is very bad
-    _asm {
-        mov         al, 0
-        mov         ecx, dword ptr[esp+4]
-        xchg        al, byte ptr[ecx]
-        ret
-    };
-}
 
 #define usleep(x) Sleep((x)*1000)
 
@@ -71,13 +49,6 @@ struct iovec {
 };
 #define snprintf _snprintf
 
-_Check_return_ _CRTIMP int __cdecl _mkdir(_In_z_ const char * _Path);
-
-/*
-static inline int mkdir(const char * _Path, int perms) {
-    return _mkdir(_Path);
-}
-*/
 static inline int ftruncate(int fd, long size) {
     return _chsize(fd, size);
 }
@@ -86,7 +57,5 @@ static inline int ftruncate(int fd, long size) {
 #define PROT_WRITE FILE_MAP_WRITE
 
 #endif
-
-#define spdiv(a, b) ((a) + (b) - 1) / (b)
 
 #endif

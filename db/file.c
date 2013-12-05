@@ -7,16 +7,15 @@
  * BSD License
  */
 
+#include <sp.h>
 #ifndef _MSC_VER
 #include <sys/mman.h>
 #include <unistd.h>
 #else
 #pragma warning( disable: 4996 ) // POSIX name is deprecated
-#include <sp.h>
 #endif
 #include <fcntl.h>
 #include <errno.h>
-#include <sp.h>
 
 int sp_fileexists(char *path) {
 #ifdef _MSC_VER

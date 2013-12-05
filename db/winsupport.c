@@ -9,7 +9,7 @@ int pthread_cond_init(pthread_cond_t *cv, const void *t)
     cv->sema_ = CreateSemaphore(NULL,       // no security
         0,          // initially 0
         0x7fffffff, // max count
-        NULL);      // unnamed 
+        NULL);      // unnamed
     InitializeCriticalSection(&cv->waiters_count_lock_);
     cv->waiters_done_ = CreateEvent(NULL,  // no security
         FALSE, // auto-reset
@@ -46,11 +46,11 @@ int pthread_cond_wait(pthread_cond_t *cv, pthread_mutex_t *external_mutex)
     // then let all the other threads proceed.
     if (last_waiter)
         // This call atomically signals the <waiters_done_> event and waits until
-        // it can acquire the <external_mutex>.  This is required to ensure fairness. 
+        // it can acquire the <external_mutex>.  This is required to ensure fairness.
         SignalObjectAndWait(cv->waiters_done_, *external_mutex, INFINITE, FALSE);
     else
         // Always regain the external mutex since that's the guarantee we
-        // give to our callers. 
+        // give to our callers.
         WaitForSingleObject(*external_mutex, INFINITE);
     return 0;
 }
@@ -61,7 +61,7 @@ int pthread_cond_signal(pthread_cond_t *cv)
     int have_waiters = cv->waiters_count_ > 0;
     LeaveCriticalSection(&cv->waiters_count_lock_);
 
-    // If there aren't any waiters, then this is a no-op.  
+    // If there aren't any waiters, then this is a no-op.
     if (have_waiters)
         ReleaseSemaphore(cv->sema_, 1, 0);
     return 0;
@@ -90,9 +90,9 @@ int pthread_cond_broadcast(pthread_cond_t *cv)
         LeaveCriticalSection(&cv->waiters_count_lock_);
 
         // Wait for all the awakened threads to acquire the counting
-        // semaphore. 
+        // semaphore.
         WaitForSingleObject(cv->waiters_done_, INFINITE);
-        // This assignment is okay, even without the <waiters_count_lock_> held 
+        // This assignment is okay, even without the <waiters_count_lock_> held
         // because no other waiter threads can wake up to access it.
         cv->was_broadcast_ = 0;
     }
@@ -191,3 +191,27 @@ int sp_win_openfile(char* path, int flags)
     return sp_win_openfileshare(path, flags, FILE_SHARE_DELETE);
 }
 
+__declspec(naked)
+char __sync_lock_test_and_set(volatile char * a, char v)
+{
+    // Here's a quick mess to implement 8bit InterlockedExchange which
+    // apparently is only available in windows8 - hopefully it works
+    _asm {
+            mov         al, byte ptr [esp+8]
+            mov         ecx, dword ptr[esp+4]
+            xchg        al, byte ptr[ecx]
+            ret
+    };
+}
+__declspec(naked)
+void __sync_lock_release(volatile char * a)
+{
+    // Here's a quick mess to implement 8bit InterlockedExchange which
+    // apparently is only available in windows8 - hopefully it works
+    _asm {
+        mov         al, 0
+        mov         ecx, dword ptr[esp+4]
+        xchg        al, byte ptr[ecx]
+        ret
+    };
+}
